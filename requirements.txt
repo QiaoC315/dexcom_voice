@@ -1,0 +1,7 @@
+googletrans==4.0.0rc1
+gTTS==2.4.0
+numpy==1.24.4
+pyalsaaudio==0.10.0
+pydexcom==0.3.2
+pydub==0.25.1
+soundfile==0.12.1

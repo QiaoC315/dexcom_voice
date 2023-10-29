@@ -4,12 +4,13 @@
   "ous" : true,
   "low_threshold" : 4.5,
   "critical_low_threshold" : 4.0,
-  "high_threshold" : 11.0,
+  "high_threshold" : 22.0,
   "base_lang" : "en",
   "alertmsgs" : {
     "low_alert" : "act now",
     "critical_low_alert" : "critical low alert, dangerously low readings, confirm with glucometer, act immediately",
     "high_alert" : "High alert"
+    "no_data" : "No data recieved, check signal"
   },
   "locale" : ["en_CA.UTF8", "pl_PL.UTF8"],
   "poll_interval_s" : 320

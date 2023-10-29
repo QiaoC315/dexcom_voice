@@ -153,40 +153,35 @@ def play(device_type, f: wave.Wave_read, till_time: datetime):
         f.rewind()
     
 
-def get_audio_msg(reading: float, trend: str, msg: str) :
-    # total_audio = AudioSegment.empty()
+def get_audio_msg(reading: Optional[float], trend: Optional[str], msg: str) :
+
     total_audio = np.array([])
     for l in LANGS :
         l_dict: dict = MP3DICT[l]
-        trend_name = trend.replace(' ', '_')
-        if reading not in l_dict :
-            prep_voice_num(reading, LANG_TO_LOCALE[l])
-        if msg not in l_dict:
-            prep_single_voice_msg(msg, ALERTMSGS[msg], l)
-        if trend not in l_dict:
-            prep_single_voice_msg(trend_name, trend, l)
+        print(reading)
+        print(trend)
+        concat_list = []
+        if reading:
+            concat_list.append(reading)
+            if reading not in l_dict :
+                prep_voice_num(reading, LANG_TO_LOCALE[l])
         
-        for n in [reading, trend_name, msg] :
+        if trend:
+            trend_name = trend.replace(' ', '_')
+            concat_list.append(trend_name)
+            if trend_name not in l_dict:
+                prep_single_voice_msg(trend_name, trend, l)
+            
+        if msg not in l_dict:
+            print('in msg')
+            prep_single_voice_msg(msg, ALERTMSGS[msg], l)
+        concat_list.append(msg)
+        
+        print(concat_list)
+        for n in concat_list :
             total_audio, samplerate = concat_audio(total_audio, l_dict[n])
     
     return total_audio, samplerate
-
-# def get_audio_msg_old(reading: float, trend: str, msg: str) :
-#     total_audio = AudioSegment.empty()
-#     for l in LANGS :
-#         l_dict: dict = MP3DICT[l]
-#         trend_name = trend.replace(' ', '_')
-#         if reading not in l_dict :
-#             prep_voice_num(reading, LANG_TO_LOCALE[l])
-#         if msg not in l_dict:
-#             prep_single_voice_msg(msg, ALERTMSGS[msg], l)
-#         if trend not in l_dict:
-#             prep_single_voice_msg(trend_name, trend, l)
-#         total_audio += AudioSegment.from_wav(l_dict[reading])
-#         total_audio += AudioSegment.from_wav(l_dict[trend_name])
-#         total_audio += AudioSegment.from_wav(l_dict[msg])
-#     return total_audio
-
 
 def get_glucose_reading() -> Optional[GlucoseReading] :
     return DEXCOM.get_current_glucose_reading()
@@ -195,8 +190,11 @@ def get_next_poll_seconds(dt : datetime) :
     delta = datetime.now() - dt
     return POLL_INTERVAL_S - delta.seconds
 
-def loop_play_till_time(gr: GlucoseReading, alert) :
-    audio, samplerate = get_audio_msg(gr.mmol_l, gr.trend_description, alert)
+def loop_play_till_time(gr: Optional[GlucoseReading], alert) :
+    mmol_l = gr.mmol_l if gr else None
+    trend_description = gr.trend_description if gr else None
+
+    audio, samplerate = get_audio_msg(mmol_l, trend_description, alert)
     next_pool_after = get_next_poll_seconds(gr.datetime)
     till_time = datetime.now() + timedelta(0, next_pool_after)
     iobytes = io.BytesIO()
@@ -205,8 +203,11 @@ def loop_play_till_time(gr: GlucoseReading, alert) :
     with wave.open(iobytes, 'rb') as f:
 	    play('default', f, till_time)
 
-def react(gr: GlucoseReading) -> int:
-    if gr.mmol_l <= CRITICAL_LOW_THRESHOLD :
+def react(gr: Optional[GlucoseReading]):
+    
+    if gr is None:
+        loop_play_till_time(gr, NO_DATA)
+    elif gr.mmol_l <= CRITICAL_LOW_THRESHOLD :
         loop_play_till_time(gr, CRITICAL_LOW_ALERT)
     elif gr.mmol_l <= LOW_THRESHOLD :
         loop_play_till_time(gr, LOW_ALERT)
@@ -223,7 +224,6 @@ def main():
     print('started')
     while True :
         react(get_glucose_reading())
-
 
 if __name__ == "__main__":
     main()
