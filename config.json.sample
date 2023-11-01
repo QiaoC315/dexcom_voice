@@ -9,7 +9,7 @@
   "alertmsgs" : {
     "low_alert" : "act now",
     "critical_low_alert" : "critical low alert, dangerously low readings, confirm with glucometer, act immediately",
-    "high_alert" : "High alert"
+    "high_alert" : "High alert",
     "no_data" : "No data recieved, check signal"
   },
   "locale" : ["en_CA.UTF8", "pl_PL.UTF8"],
